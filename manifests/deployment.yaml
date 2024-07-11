@@ -1,0 +1,128 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: saaspe-azure-services
+  namespace: {#namespace#}
+  labels:
+    app: saaspe-azure-services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: saaspe-azure-services
+  template:
+    metadata:
+      name: saaspe-azure-services
+      labels:
+        app: saaspe-azure-services
+    spec:
+      priorityClassName: low-priority-pod
+      containers:
+        - name: saaspe-azure-services
+          image: {#image#}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8081
+          resources:
+            requests:
+              memory: "350Mi"
+              cpu: "350m"
+            limits:
+              memory: "512Mi"
+              cpu: "512m"   
+          env:
+          - name: SPRING_DATASOURCE_URL       # Postgres URL variable
+            valueFrom: 
+              configMapKeyRef:
+                name: saaspe-azure-services-config
+                key: POSTGRES_URL        
+          - name: SPRING_DATASOURCE_USERNAME    # Postgres DB User Name
+            valueFrom: 
+              configMapKeyRef:
+                name: saaspe-azure-services-config
+                key: POSTGRES_USERNAME
+          - name: SPRING_DATASOURCE_PASSWORD    # Postgres DB Password
+            valueFrom: 
+              configMapKeyRef:
+                name: saaspe-azure-services-config
+                key: POSTGRES_PASSWORD
+          - name: SPRING_DATA_MONGODB_HOST    # MongoDB Host
+            valueFrom: 
+              configMapKeyRef:
+                name: saaspe-azure-services-config
+                key: MONGODB_HOST
+          - name: SPRING_DATA_MONGODB_USERNAME    #MongoDB UserName
+            valueFrom: 
+              configMapKeyRef:
+                name: saaspe-azure-services-config
+                key: MONGODB_USERNAME     
+          - name: SPRING_DATA_MONGODB_PASSWORD    # MongoDB Password
+            valueFrom: 
+              configMapKeyRef:
+                name: saaspe-azure-services-config
+                key: MONGODB_PASSWORD
+          - name: SPRING_DATA_MONGODB_DATABASE    # MongoDB Database
+            valueFrom: 
+              configMapKeyRef:
+
+                name: saaspe-azure-services-config
+
+                key: MONGODB_DATABASE      
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: saaspe-azure-services-svc
+  namespace:  {#namespace#}
+  labels:
+    app: saaspe-azure-services
+spec:
+  ports:
+    - port: 8081
+      targetPort: 8081
+  selector:
+    app: saaspe-azure-services
+  type: ClusterIP
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: saaspe-azure-services-config
+  namespace: {#namespace#}
+  labels:
+    app: saaspe-azure-services
+data:
+  POSTGRES_URL: jdbc:postgresql://postgresdev-dev-svc:5432/postgres
+  POSTGRES_USERNAME: saaspeadmin
+  POSTGRES_PASSWORD: fG7GE9RhjqXODQb
+  MONGODB_HOST: mongodb-dev-svc
+  MONGODB_USERNAME: saaspeadmin
+  MONGODB_PASSWORD: 6a1LzfgGNJMPjJhyn362
+  MONGODB_DATABASE: cloudDev
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: nginx
+  name: saaspe-azure-services-ingress
+  namespace: {#namespace#}
+spec:
+  rules:
+  - host: {#host#}
+    http:
+      paths:
+      - backend:
+          service:
+            name: saaspe-azure-services-svc
+            port:
+              number: 8081
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - {#host#}
+    secretName: saspe-app-tls1

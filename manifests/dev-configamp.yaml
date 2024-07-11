@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: saaspe-azure-services-config
+  namespace: dev
+  labels:
+    app: saaspe-azure-services
+data:
+  POSTGRES_URL: jdbc:postgresql://postgresdev-dev-svc:5432/postgres
+  POSTGRES_USERNAME: saaspeadmin
+  POSTGRES_PASSWORD: fG7GE9RhjqXODQb
+  MONGODB_HOST: mongodb-dev-svc
+  MONGODB_USERNAME: saaspeadmin
+  MONGODB_PASSWORD: 6a1LzfgGNJMPjJhyn362
+  MONGODB_DATABASE: cloudDev
